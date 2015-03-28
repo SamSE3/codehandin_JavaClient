@@ -25,11 +25,11 @@ import static org.junit.Assert.*;
  */
 public class MoodleClientTest {
 
-    public static final String adminToken = "97dc83e488f056ab266fc3947902b8e9",
+    public static final String adminToken = "1e8135b7d823794920ec25b695e80e65",
             adminUN = "aadmin", adminPW = "aadminA!1",
-            teacherToken = "876461ceb0f64ca909e22d415069e210",
+            teacherToken = "39880e49c322219a36a466ae1c85fdc8",
             teacherUN = "ateacher", teacherPW = "ateacherA!1",
-            studentToken = "d1cdd2ec305cb7db8b3f3f85c8dba560",
+            studentToken = "6c8831ca666055dc942a316a4b081b90",
             studentUN = "astudent", studentPW = "astudentA!1";
 
     public static final String fileToUpload = "C:/Users/SuperNova/Documents/NetBeansProjects/cheeseGame/src/chessgame/king.java",

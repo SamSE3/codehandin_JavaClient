@@ -66,15 +66,15 @@ public class MoodleClient {
     private static final String CODEHANDIN_TEMP_FILEAREA = "codehandintempzips", // for zips of assignment files
             CODEHANDIN_FILEAREA = "codehandin_files",
             CODEHANDIN_ZIP_FILEAREA = "codehandin_zipfiles",
-            SHORT_SERIVCE_NAME = "codehandin",
-            COMPONENT = "assignsubmission_codehandin"; //
+            SHORT_SERIVCE_NAME = "codehandin_ws",
+            COMPONENT = "assignsubmission_codehandin_submission"; //
 
     // functions
-    private static final String fetch_assignments = "local_codehandinws_fetch_assignments",
-            fetch_assignment_file_list = "local_codehandinws_fetch_assignment_file_list",
-            fetch_submission_file_list = "local_codehandinws_fetch_submission_file_list",
-            set_and_test_submission = "local_codehandinws_set_and_test_submission",
-            update_codehandin = "local_codehandinws_update_codehandin";
+    private static final String fetch_assignments = "local_codehandin_webservice_fetch_assignments",
+            fetch_assignment_file_list = "local_codehandin_webservice_fetch_assignment_file_list",
+            fetch_submission_file_list = "local_codehandin_webservice_fetch_submission_file_list",
+            set_and_test_submission = "local_codehandin_webservice_set_and_test_submission",
+            update_codehandin = "local_codehandin_webservice_update_codehandin";
 
     /**
      *

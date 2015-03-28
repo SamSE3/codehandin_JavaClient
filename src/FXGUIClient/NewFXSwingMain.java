@@ -142,8 +142,8 @@ public class NewFXSwingMain extends Application {
         grid.add(textFieldFAN, 1, 1);
         grid.add(labelPassword, 0, 2);
         grid.add(passwordFieldFANPassword, 1, 2);
-        grid.add(hBoxButtonSignIn, 1, 4);
-        grid.add(textStatus, 1, 6, 2, 1);
+        grid.add(hBoxButtonSignIn, 1, 3);
+        grid.add(textStatus, 0, 4, 2, 1);
 
         // make the scene
         return new Scene(grid);
@@ -188,6 +188,29 @@ public class NewFXSwingMain extends Application {
             mode = 2;
         }
 
+        //error replies
+        /*
+         {
+         "error": "Web service is not available (it doesn\u0027t exist or might be disabled)",
+         "stacktrace": "* line 77 of \\login\\token.php: moodle_exception thrown\n",
+         "debuginfo": "\r\nError code: servicenotavailable",
+         "reproductionlink": "http://localhost/"
+         }
+         {
+         "error": "The username was not found in the database",
+         "stacktrace": "* line 196 of \\login\\token.php: moodle_exception thrown\n",
+         "debuginfo": "\r\nError code: usernamenotfound",
+         "reproductionlink": "http://localhost/"
+         }
+         "warnings": [
+         {
+         "item": "fetch_assignments",
+         "itemid": 0,
+         "warningcode": "noIDsInDB",
+         "message": " There are currently no codehandin assignments in the database"
+         }
+         ]
+         */
         @Override
         protected Void call() throws Exception {
             error = false;
@@ -198,7 +221,15 @@ public class NewFXSwingMain extends Application {
                     cd = MoodleClient.getAssignments(token);
                 } else {
                     error = true;
-                    errorText = (tokenObject.error != null) ? tokenObject.error : "unknown error? no error or token returned";
+                    if (tokenObject.error != null) {
+                        if (tokenObject.error.length() > 28) {
+                            errorText = tokenObject.error.substring(0, 28) + "...";
+                        } else {
+                            errorText = tokenObject.error;
+                        }
+                    } else {
+                        errorText = "unknown error? no error or token returned";
+                    }
                 }
             } else if (mode == 0) {
                 cd = MoodleClient.getAssignments(token);
@@ -208,7 +239,15 @@ public class NewFXSwingMain extends Application {
             if (cd != null) {
                 if (cd.courses == null) {
                     error = true;
-                    errorText = (cd.error != null) ? cd.error : "unknown error? no error or token returned";
+                    if (cd.error != null) {
+                        errorText = "unknown error? no error/token returned";
+                    } else {
+                        if (cd.error.length() > 28) {
+                            errorText = cd.error.substring(0, 28) + "...";
+                        } else {
+                            errorText = cd.error;
+                        }
+                    }
                 }
             }
             return null;
