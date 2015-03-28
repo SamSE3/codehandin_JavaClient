@@ -39,14 +39,14 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParser;
 //import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import java.net.ConnectException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Calendar;
 import moodleclient.ReplyClasses.*;
 
 /**
+ * A client to connect to the Moodle Codehandin webservice the moodle_url will
+ * need to be changed to that of the Moodle site.
  *
  * @author SuperNova
  */
@@ -77,12 +77,18 @@ public class MoodleClient {
             update_codehandin = "local_codehandin_webservice_update_codehandin";
 
     /**
+     * calls a function on the Moodle webserver
      *
-     * @param <T>
-     * @param script
-     * @param params
-     * @param classtype
-     * @return
+     * @param <T> the reply class that is returned
+     * @param script the location of the script to handle the request on Moodle
+     * @param params a key value pair of parameters to pass to the script should
+     * include {"wstoken", token}, - the token or the username and the password
+     * to use {"wsfunction", update_codehandin}, - the functional to call
+     * {"codehandin", dataAsJsonString} - any data that is required by the
+     * function
+     * @param classtype the type of reply class (must be an extension of the
+     * MoodleDataException) as this enables error handling
+     * @return a object representing the reply
      */
     private static <T extends MoodleDataException> T aJSONRequest(String script, String[][] params, Class<T> classtype) {
 
@@ -228,14 +234,16 @@ public class MoodleClient {
     }
 
     /**
+     * uploads an updated for a Codehandin assignment
      *
      * @param token the token that uniquely identifies the user
      * @param zipFile a zip file containing the assignment or submission files
      * to upload
      * @param assignmentid the id of the assignment to upload the file to
      * @param dataAsJsonString the data to upload (codehandin, checkpoint, test
-     * @param legacy
-     * @return
+     * @param legacy if true will use the separate methods to handle the file
+     * upload and the codehandin assignment data upload
+     * @return the reply from the server in the form of UploadReply object
      * @throws FileNotFoundException
      */
     public static UploadReply uploadCodehandin(String token, File zipFile, int assignmentid, String dataAsJsonString, boolean legacy) throws FileNotFoundException {
@@ -258,6 +266,23 @@ public class MoodleClient {
         return null;
     }
 
+    /**
+     *
+     * uploads an updated for a Codehandin assignment
+     *
+     * @param token the token that uniquely identifies the user
+     * @param zipFile a zip file containing the assignment or submission files
+     * to upload
+     * @param assignmentid the id of the assignment to upload the file to
+     * @param test if the assignment should be tested or not (the results will
+     * be returned if true)
+     * @param submit if the assignment should be submitted for grading (if so
+     * the full grading test results will be returned)
+     * @param legacy if true will use the separate methods to handle the file
+     * upload and the codehandin assignment data upload
+     * @return the reply from the server in the form of UploadReply object
+     * @throws FileNotFoundException
+     */
     public static UploadReply uploadSubmission(String token, File zipFile, int assignmentid, boolean test, boolean submit, boolean legacy) throws FileNotFoundException {
         String dataAsJsonString = "{\"assignmentid\":\"" + assignmentid + "\"";
         dataAsJsonString += ",\"test\":\"" + test + "\"";
@@ -289,7 +314,7 @@ public class MoodleClient {
      *
      * @param username the user's Moodle username
      * @param password the users Moodle password
-     * @return a token which is used to access web services
+     * @return a ReplyMoodleToken object (contains the token or any errors)
      */
     public static ReplyMoodleToken getToken(String username, String password) {
         ReplyMoodleToken aTC = aJSONRequest(login_script,
@@ -297,10 +322,6 @@ public class MoodleClient {
                     {"username", username},
                     {"password", password},
                     {"service", SHORT_SERIVCE_NAME}}, ReplyMoodleToken.class);
-
-//        if (JSONResponse.has("error")) {
-//            return JSONResponse.get("error").getAsString();
-//        }
         return aTC;
     }
 
@@ -311,27 +332,23 @@ public class MoodleClient {
      * @return the details of an assignment as JsonObject
      */
     public static CHIData getAssignments(String token) {
-        return getAssignments(token, true);
+        return getAssignments(token, true, new int[]{});
     }
 
     /**
-     * get the basic details of all assignment
+     * get the details of all assignments with all details (includes checkpoint
+     * and test details)
      *
      * @param token the token that uniquely identifies the user
-     * @param basic true - minimal details, false - all details (includes
-     * checkpoint and test details)
      * @return the details of an assignment as JsonObject
      */
-    public static CHIData getAssignments(String token, boolean basic) {
-        return aJSONRequest(webservice_script,
-                new String[][]{
-                    {"wstoken", token},
-                    {"wsfunction", fetch_assignments},
-                    {"basic", (basic ? "1" : "0")}}, CHIData.class);
+    public static CHIData getAssignmentsAll(String token) {
+        return getAssignments(token, false, new int[]{});
     }
 
     /**
-     * get the details of an assignment
+     * get the details of one or more assignment as basic (no checkpoint and
+     * test details) or not basic (includes checkpoint and test details)
      *
      * @param token the token that uniquely identifies the user
      * @param basic true - minimal details, false - all details (includes
@@ -377,7 +394,7 @@ public class MoodleClient {
      * or {@link #getAllFiles(java.lang.String, int, java.lang.String)} methods
      *
      * @param token the token that uniquely identifies the user
-     * @param assignmentid the id of the assignment to get details for
+     * @param assignmentid the id of the assignment
      * @return a JsonArray of the fileURLs and their pathnames
      */
     public static FileDescriptions getAssignmentFileURLs(String token, int assignmentid) {
@@ -390,10 +407,12 @@ public class MoodleClient {
 
     /**
      *
-     * @param token
-     * @param assignmentid
-     * @param savePath
-     * @param contextid
+     * downloads and unzips the files for an assignment
+     *
+     * @param token the token that uniquely identifies the user
+     * @param assignmentid the id of the assignment
+     * @param savePath the path to extract the assignment files into
+     * @param contextid the context under which the files are held under
      * @return
      */
     public static boolean downloadAndUnzipAssignmentZip(String token, int assignmentid, String savePath, int contextid) {
@@ -405,12 +424,13 @@ public class MoodleClient {
     }
 
     /**
-     * will be hidden from students
+     * downloads and unzips the files for an assignment (including grade only
+     * files) access to this zip is restricted on the Moodle side
      *
-     * @param token
-     * @param assignmentid
-     * @param savePath
-     * @param contextid
+     * @param token the token that uniquely identifies the user
+     * @param assignmentid the id of the assignment
+     * @param savePath the path to extract the assignment files into
+     * @param contextid the context under which the files are held under
      * @return
      */
     public static boolean downloadAndUnzipGradeAssignmentZip(String token, int assignmentid, String savePath, int contextid) {
@@ -422,20 +442,15 @@ public class MoodleClient {
         return true;
     }
 
-//    public static void getSubmissionsInfo(String token, int assignmentid) {
-//        aJSONRequest(webservice_script,
-//                new String[][]{
-//                    {"wstoken", token},
-//                    {"wsfunction", "mod_assign_get_submissions"},
-//                    {"assignmentid[0]", Integer.toString(assignmentid)}}, FileDescriptions.class);
-//    }
     /**
-     * download a file form the moodle server
+     * download a file from the Moodle server
      *
-     * @param token
-     * @param savePath
-     * @param fd
-     * @return File a single file
+     * @param token the token that uniquely identifies the user
+     * @param fd a file description contains the base path of the file(filepath)
+     * and the url to request the file from (fileurl)
+     * @param savePath the path to extract the assignment files into
+     *
+     * @return File the downloaded file
      */
     private static File downloadFile(String token, FileDesc fd, String savePath) { //testFiles or submission files are the only two files to get
 
@@ -446,11 +461,6 @@ public class MoodleClient {
         if (!downloadFolder.exists()) {
             downloadFolder.mkdirs(); // just in case make the parent directories as well
         }
-//        try {
-//            targetFile.createNewFile();
-//        } catch (IOException e) {
-//
-//        }
         // Send request
         InputStream input = null;
         OutputStream output = null;
@@ -477,6 +487,7 @@ public class MoodleClient {
 //            BufferedReader reader = new BufferedReader(new InputStreamReader(input));
 //             String reply = readInReply(reader);
 //            System.out.println("REPLY: "+reply);
+                // can't use the above to read in files ... just to it the most simple way
                 output = new FileOutputStream(targetFile);
                 byte[] buffer = new byte[8 * 1024];
                 int bytesRead;
@@ -511,6 +522,16 @@ public class MoodleClient {
         return targetFile;
     }
 
+    /**
+     * downloads a file from Moodle and unzips it
+     *
+     * @param token the token that uniquely identifies the user
+     * @param assignmentid the id of the assignment
+     * @param fd a file description contains the base path of the file(filepath)
+     * and the url to request the file from (fileurl)
+     * @param savePath the path to extract the assignment files into
+     * @return
+     */
     private static boolean downloadAndUnzipFile(String token, int assignmentid, FileDesc fd, String savePath) {
         File targetFile = downloadFile(token, fd, savePath);
         if (targetFile == null) {
@@ -523,13 +544,14 @@ public class MoodleClient {
     }
 
     /**
-     * download all submission files from the server
+     * download all submission files from the server (uses the zipped assignment
+     * file rather than individual files)
      *
      * @todo maybe throw an error if no files can be found
-     * @param token
-     * @param assignmentid
-     * @param savePath
-     * @return
+     * @param token the token that uniquely identifies the user
+     * @param assignmentid the id of the assignment
+     * @param savePath the path to extract the assignment files into
+     * @return ArrayList<File> of all downloaded files
      */
     public static ArrayList<File> getAllSubmissionFiles(String token, int assignmentid, String savePath) {
         FileDescriptions fds = getSubmissionFileURLs(token, assignmentid, false);
@@ -544,13 +566,14 @@ public class MoodleClient {
     }
 
     /**
-     * download all assignment files from the server
+     * download all assignment files from the server (uses the zipped assignment
+     * file rather than individual files)
      *
      * @todo maybe throw an error if no files can be found
-     * @param token
-     * @param assignmentid
-     * @param savePath
-     * @return
+     * @param token the token that uniquely identifies the user
+     * @param assignmentid the id of the assignment
+     * @param savePath the path to extract the assignment files into
+     * @return ArrayList<File> of all downloaded files
      */
     public static ArrayList<File> getAllAssignmentFiles(String token, int assignmentid, String savePath) {
         FileDescriptions fds = getAssignmentFileURLs(token, assignmentid);
@@ -571,8 +594,8 @@ public class MoodleClient {
      * convert a UTC timestamp to a date string to the systems timezone in the
      * format: "dd-MM-yyyy HH:mm:ss"
      *
-     * @param timestamp
-     * @return
+     * @param timestamp the time stamp to convert
+     * @return String a string representation of the date
      */
     public static String convertToDateString(String timestamp) {
         Calendar calendar = Calendar.getInstance();
@@ -581,7 +604,11 @@ public class MoodleClient {
         return sdf.format(calendar.getTime());
     }
 
-    
+    /**
+     * prints out a supplied JSON string in a more readable form
+     *
+     * @param uglyJSONString the ugly JSON string to be printed
+     */
     public static void prettyJsonStringPrint(String uglyJSONString) {
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();

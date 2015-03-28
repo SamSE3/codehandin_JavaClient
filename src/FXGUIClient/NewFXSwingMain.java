@@ -89,6 +89,10 @@ public class NewFXSwingMain extends Application {
         timelineSignIn.setCycleCount(Timeline.INDEFINITE);
     }
 
+    /**
+     * generates the logIn Scene
+     * @return 
+     */
     public Scene logInScene() {
         primaryStage.setTitle("CHI builder - login");
 
@@ -152,6 +156,9 @@ public class NewFXSwingMain extends Application {
 //        primaryStage.show();
     }
 
+    /**
+     * performs the login and error handling
+     */
     public class LoginTask extends Task<Void> {
 
         String username, password;
@@ -188,7 +195,7 @@ public class NewFXSwingMain extends Application {
             mode = 2;
         }
 
-        //error replies
+        //some of the possible error replies
         /*
          {
          "error": "Web service is not available (it doesn\u0027t exist or might be disabled)",
@@ -272,6 +279,10 @@ public class NewFXSwingMain extends Application {
         }
     }
 
+    /**
+     * generates the assignment display scene
+     * @return 
+     */
     private Scene getAssignmentSelectorScene() {
 
         primaryStage.setTitle("CHI builder - Assignment Selector");
@@ -370,6 +381,9 @@ public class NewFXSwingMain extends Application {
         }
     }
 
+    /**
+     * performs the uploading of a Codehandin to web service
+     */
     public class uploadCHITask extends Task<Void> {
 
         File zipFile;
