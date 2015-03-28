@@ -7,8 +7,6 @@ package moodleclient;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import junit.framework.Assert;
 import moodleclient.DataClasses.CHITest;
 import moodleclient.DataClasses.Checkpoint;
 import moodleclient.DataClasses.Codehandin;
@@ -241,7 +239,7 @@ public class MoodleClientTest {
         if (cd.exception != null) {
             fail("cd throughs an exception");
         }
-        Codehandin chi = cd.courses[0].codehandins[0];
+        Codehandin chi = cd.courses[0].getCodehandins()[0];
         chi.cleanAssignment();
         ChangeObject chio = chi.getChangeData();
         System.out.println(chio);
@@ -256,7 +254,7 @@ public class MoodleClientTest {
     private void sometest() {
         System.out.println("sometest");
         CHIData cd = MoodleClient.getAssignments(adminToken, false, new int[]{aassignmentid});
-        Codehandin chi = cd.courses[0].codehandins[0];
+        Codehandin chi = cd.courses[0].getCodehandins()[0];
         //System.out.println(chi);
         chi.setup(savepath);
         //chi.cleanAssignment();

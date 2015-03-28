@@ -1,4 +1,4 @@
-package FXGUIClient;
+package oldCodeStubs;
 
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;

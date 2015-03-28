@@ -1,4 +1,4 @@
-package FXGUIClient;
+package oldCodeStubs;
 
 import java.util.HashMap;
 import java.util.Map;

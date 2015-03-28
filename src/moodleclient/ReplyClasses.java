@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import moodleclient.DataClasses.Codehandin;
+import moodleclient.DataClasses.Course;
 
 /**
  *
@@ -187,19 +188,6 @@ public class ReplyClasses {
                         + super.toString();
             }
             return "exception= " + exception + ", errorcode= " + errorcode + ", message= " + message + ", debuginfo= " + debuginfo;
-        }
-    }
-
-    public static class Course {
-
-        int id;
-        String shortname;
-        //ArrayList<Codehandin> codehandins = new ArrayList<>();
-        Codehandin[] codehandins;
-
-        @Override
-        public String toString() {
-            return "Course{" + "id=" + id + ", shortname=" + shortname + ", codehandins=" + Arrays.toString(codehandins) + '}';
         }
     }
 
