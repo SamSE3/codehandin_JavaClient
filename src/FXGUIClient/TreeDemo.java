@@ -28,10 +28,14 @@ public class TreeDemo extends Application {
 
     @Override
     public void start(Stage stage) {
+        TreeView<Alert> treeView2 = new TreeView<>();
         TreeItem<Alert> rootNode = new TreeItem<>(new Alert("dummy", "dummy"));
         rootNode.setExpanded(true);
         TreeItem<Alert> groupNode = new TreeItem<>(new Alert("group item", "group item"));
-        groupNode.getChildren().addAll(new TreeItem<>(new Alert("sub item 1", "sub item 1")),
+        TreeItem<Alert> subgroupNode = new TreeItem<>(new Alert("sub group item", "sub group item"));
+        subgroupNode.getChildren().add(new TreeItem<>(new Alert("sub group item item", "sub group item item")));
+        
+        groupNode.getChildren().addAll(subgroupNode,
                 new TreeItem<>(new Alert("sub item 2", "sub item 2")),
                 new TreeItem<>(new Alert("sub item 3", "sub item 3")));
 
@@ -40,11 +44,14 @@ public class TreeDemo extends Application {
                 new TreeItem<>(new Alert("item 2", "item 2")),
                 new TreeItem<>(new Alert("item 3", "item 3")));
 
+
+        
         VBox box = new VBox();
         final Scene scene = new Scene(box, 400, 300);
         scene.setFill(Color.LIGHTGRAY);
 
         TreeView<Alert> treeView = new TreeView<>(rootNode);
+        
         treeView.setShowRoot(false);
         treeView.setCellFactory(new Callback<TreeView<Alert>, TreeCell<Alert>>() {
             @Override

@@ -127,10 +127,10 @@ public class MultipartUtility {
     }
 
     /**
-     * Completes the request and receives response from the server.
+     * Completes the request and receives the response from the server returning
+     * it in the form of a string
      *
-     * @return a list of Strings as response in case the server returned status
-     * OK, otherwise an exception is thrown.
+     * @return a single response string
      * @throws IOException
      */
     public String textFinish() throws IOException {
@@ -156,7 +156,7 @@ public class MultipartUtility {
 
     /**
      * Completes the request and receives response from the server. remember to
-     * close the reader and to call readerFinishDisconnect to disconnect the
+     * * close the reader and to call readerFinishDisconnect to disconnect the
      * http connection
      *
      * @return a BufferedReader containing the server response
@@ -176,6 +176,9 @@ public class MultipartUtility {
         }
     }
 
+    /**
+     * if using a reader to read the
+     */
     public void readerFinishDisconnect() {
         httpConn.disconnect();
     }

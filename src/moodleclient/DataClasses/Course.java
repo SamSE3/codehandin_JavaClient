@@ -18,10 +18,41 @@ public class Course {
     //ArrayList<Codehandin> codehandins = new ArrayList<>();
     private Codehandin[] codehandins;
 
-    @Override
-    public String toString() {
-        return "Course{" + "id=" + id + ", shortname=" + shortname + ", codehandins=" + Arrays.toString(codehandins) + '}';
+    /**
+     * sets up all the codehandin assignments (linking their files and ordering
+     * them by their specified order)
+     *
+     * @param baseFolder
+     */
+    public void setup(String baseFolder) {
+        if (codehandins == null) {
+            //throw error?
+        } else {
+            for (Codehandin c : codehandins) {
+                c.setup(baseFolder);
+            }
+        }
     }
+
+    public void setupNoFiles() {
+        if (codehandins == null) {
+            //throw error?
+        } else {
+            for (Codehandin c : codehandins) {
+                c.setupNoFiles();
+            }
+        }
+    }
+    
+    public void setupFiles(String baseFolder) {
+        if (codehandins == null) {
+            //throw error?
+        } else {
+            for (Codehandin c : codehandins) {
+                c.setupFiles(baseFolder);
+            }
+        }
+    }    
 
     public int getId() {
         return id;
@@ -34,6 +65,9 @@ public class Course {
     public Codehandin[] getCodehandins() {
         return codehandins;
     }
-    
-    
+
+    @Override
+    public String toString() {
+        return "Course{" + "id=" + id + ", shortname=" + shortname + ", codehandins=" + Arrays.toString(codehandins) + '}';
+    }
 }

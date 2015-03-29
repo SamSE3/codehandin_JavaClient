@@ -5,12 +5,10 @@
  */
 package moodleclient.DataClasses;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import static moodleclient.ReplyClasses.readFile;
 
 /**
@@ -42,18 +40,17 @@ public class CHITest {
     private Long inputFileLastModified, outputFileLastModified, outputerrFileLastModified; // so file modificaitons can be checked to see if a reupload is needed
     private boolean inputFileExistsOnMoodle = false, outputFileExistsOnMoodle = false, outputerrFileExistsOnMoodle = false;
 
-    HashMap<Integer, CHITest> tests;
+    //HashMap<Integer, CHITest> tests;
     //private String[] vars = new String[]{"description", "runtimeargs", "ordering", "marks", "gradeonly", "ioastext", "input", "output", "outputerr"};
     private final Boolean[] changedVars = new Boolean[]{false, false, false, false, false, false, false, false, false};
     private boolean changed = false;
 
-    public CHITest(Checkpoint parentCheckpoint, String baseFolder, HashMap<Integer, CHITest> tests) {
+    public CHITest(Checkpoint parentCheckpoint, String baseFolder) {
         this.parentCheckpoint = parentCheckpoint;
         this.gradeonly = false;
-        this.ordering = tests.size();
+        this.ordering = parentCheckpoint.testsO.size();
         changedVars[2] = true;
         changed = true;
-        this.tests = tests;
         this.basePath = null;
         this.baseFolder = baseFolder;
         status = 0;
@@ -93,11 +90,17 @@ public class CHITest {
      * @param baseFolder
      * @param tests
      */
-    public void setup(Checkpoint parentCheckpoint, String baseFolder, HashMap<Integer, CHITest> tests) {
+    public void setup(Checkpoint parentCheckpoint, String baseFolder) {
         this.parentCheckpoint = parentCheckpoint;
+        setupFiles(baseFolder);
+    }
+
+    public void setupNoFiles(Checkpoint parentCheckpoint) {
+        this.parentCheckpoint = parentCheckpoint;
+    }
+
+    public void setupFiles(String baseFolder) {
         this.baseFolder = baseFolder;
-        this.tests = tests;
-//        oldGO = gradeonly ? "g/" : "t/";
         if (id == 0) { // should never occur as setup should be called before tests are created
         } else {
             basePath = parentCheckpoint.getId() + "/" + id + "/";
@@ -129,9 +132,6 @@ public class CHITest {
                 }
             }
         }
-
-        //baseFolderOld = baseFolder + basePath;
-        //System.out.println("testid " + id + " baseFolder " + baseFolder + " basePath " + basePath);
     }
 
     public int getId() {
@@ -140,8 +140,8 @@ public class CHITest {
 
     public int getStatus() {
         return status;
-    }    
-    
+    }
+
     public String getDescription() {
         return description;
     }
@@ -484,19 +484,19 @@ public class CHITest {
 
             // statuses 0 i|o|e|oe    1 io  2 ie 3 ioe   
             if (!ie) { // no ie
-                status=0;
+                status = 0;
             } else if (oe) {
                 if (ee) { //ie+oe+ee
-                    status=3;
+                    status = 3;
                 } else { //ie+oe
-                    status=1;
+                    status = 1;
                 }
             } else if (ee) { // ie+ee
-                status=2;
+                status = 2;
             } else { // only ie
-                status=0;
+                status = 0;
             }
-            
+
             result.add("status", new JsonPrimitive(status));
             return result;
         }
@@ -539,34 +539,20 @@ public class CHITest {
     }
 
     public boolean moveTestUp() {
-        if (ordering != 0) {// there is another test below
-            CHITest test1 = tests.get(decreaseOrdering());// get the test below
-            test1.increaseOrdering();
-            tests.replace(ordering, this);
-            tests.replace(ordering + 1, test1);
-            return true;
-        }
-        return false;
+        return parentCheckpoint.moveTestUp(this);
     }
 
     public boolean moveTestDown() {
-        if (ordering < tests.size() - 1) {// there is another test above
-            CHITest test1 = tests.get(increaseOrdering());// get the test below(+1 ordering) by increasing the ordering of this test by 1
-            test1.decreaseOrdering(); // decrease the ordering of the other test
-            tests.replace(ordering, this);
-            tests.replace(ordering - 1, test1);
-            return true;
-        }
-        return false;
+        return parentCheckpoint.moveTestDown(this);
     }
 
-    private int increaseOrdering() {
+    protected int increaseOrdering() {
         changed = true;
         changedVars[2] = true;
         return ++ordering;
     }
 
-    private int decreaseOrdering() {
+    protected int decreaseOrdering() {
         changed = true;
         changedVars[2] = true;
         return --ordering;

@@ -52,7 +52,7 @@ public class CHITestTest {
         HashMap<Integer, CHITest> tests = null;
         CHITest instance = null;
         JsonArray delfiles = null;
-        instance.setup(parentCheckpoint, baseFolder, tests);
+        instance.setup(parentCheckpoint, baseFolder);
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");
     }
@@ -529,6 +529,74 @@ public class CHITestTest {
         CHITest instance = null;
         boolean expResult = false;
         boolean result = instance.deleteAllTestFolders();
+        assertEquals(expResult, result);
+        // TODO review the generated test code and remove the default call to fail.
+        fail("The test case is a prototype.");
+    }
+
+    /**
+     * Test of setupNoFiles method, of class CHITest.
+     */
+    @Test
+    public void testSetupNoFiles() {
+        System.out.println("setupNoFiles");
+        Checkpoint parentCheckpoint = null;
+        CHITest instance = null;
+        instance.setupNoFiles(parentCheckpoint);
+        // TODO review the generated test code and remove the default call to fail.
+        fail("The test case is a prototype.");
+    }
+
+    /**
+     * Test of setupFiles method, of class CHITest.
+     */
+    @Test
+    public void testSetupFiles() {
+        System.out.println("setupFiles");
+        String baseFolder = "";
+        CHITest instance = null;
+        instance.setupFiles(baseFolder);
+        // TODO review the generated test code and remove the default call to fail.
+        fail("The test case is a prototype.");
+    }
+
+    /**
+     * Test of getStatus method, of class CHITest.
+     */
+    @Test
+    public void testGetStatus() {
+        System.out.println("getStatus");
+        CHITest instance = null;
+        int expResult = 0;
+        int result = instance.getStatus();
+        assertEquals(expResult, result);
+        // TODO review the generated test code and remove the default call to fail.
+        fail("The test case is a prototype.");
+    }
+
+    /**
+     * Test of increaseOrdering method, of class CHITest.
+     */
+    @Test
+    public void testIncreaseOrdering() {
+        System.out.println("increaseOrdering");
+        CHITest instance = null;
+        int expResult = 0;
+        int result = instance.increaseOrdering();
+        assertEquals(expResult, result);
+        // TODO review the generated test code and remove the default call to fail.
+        fail("The test case is a prototype.");
+    }
+
+    /**
+     * Test of decreaseOrdering method, of class CHITest.
+     */
+    @Test
+    public void testDecreaseOrdering() {
+        System.out.println("decreaseOrdering");
+        CHITest instance = null;
+        int expResult = 0;
+        int result = instance.decreaseOrdering();
         assertEquals(expResult, result);
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");

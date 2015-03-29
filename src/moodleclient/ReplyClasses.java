@@ -43,7 +43,7 @@ public class ReplyClasses {
                 line = br.readLine();
             }
             return sb.toString();
-        } catch (FileNotFoundException ex) {
+        } catch (FileNotFoundException | NullPointerException ex) {
             return "file not found";
         } catch (IOException ex) {
             return "can't read from file";
@@ -172,7 +172,7 @@ public class ReplyClasses {
     }
 
     public static class MDException extends MoodleDataException {
-        
+
     }
 
     public static class CHIData extends MoodleDataException { // extendes exception so it can handle server errors
@@ -180,6 +180,7 @@ public class ReplyClasses {
         //ArrayList<Warning> warnings = new ArrayList<>();
         //ArrayList<
         public Course[] courses; //= new ArrayList<>();
+        public Proglang[] proglangs;
 
         @Override
         public String toString() {
@@ -189,6 +190,12 @@ public class ReplyClasses {
             }
             return "exception= " + exception + ", errorcode= " + errorcode + ", message= " + message + ", debuginfo= " + debuginfo;
         }
+    }
+
+    public static class Proglang {
+
+        int id;
+        String name;
     }
 
     public static class FileDescriptions extends MoodleDataException {

@@ -34,7 +34,7 @@ public class MoodleClientTest {
 
     public static final String fileToUpload = "C:/Users/SuperNova/Documents/NetBeansProjects/cheeseGame/src/chessgame/king.java",
             filepath = "/chessgame/", savepath = "C:/CHIFiles/";
-    
+
     public static int aassignmentid = 12, impossibleassignmentid = 7;
 
     public MoodleClientTest() {
@@ -61,7 +61,7 @@ public class MoodleClientTest {
      */
     @Test
     public void testGetToken() {
-        System.out.println("getToken");
+//        System.out.println("getToken");
 //        String result = MoodleClient.getToken(adminUN, adminPW);
 //        assertEquals(adminToken, result);
 //        result = MoodleClient.getToken(studentUN, studentPW);
@@ -85,8 +85,8 @@ public class MoodleClientTest {
     @Test
     public void testGetAssignmentsAll() {
         System.out.println("getAssignments_String_boolean");
-        CHIData cd = MoodleClient.getAssignmentsAll(adminToken);
-        
+        CHIData cd = MoodleClient.getAssignmentsAll(adminToken, false);
+
         System.out.println(cd);
 //        cd = MoodleClient.getAssignments(adminToken, true);
     }
@@ -235,7 +235,7 @@ public class MoodleClientTest {
 
     private void clean() {
         System.out.println("clean");
-        CHIData cd = MoodleClient.getAssignments(adminToken, false, new int[]{aassignmentid});
+        CHIData cd = MoodleClient.getAssignments(adminToken, false, false, new int[]{aassignmentid});
         if (cd.exception != null) {
             fail("cd throughs an exception");
         }
@@ -253,7 +253,7 @@ public class MoodleClientTest {
 
     private void sometest() {
         System.out.println("sometest");
-        CHIData cd = MoodleClient.getAssignments(adminToken, false, new int[]{aassignmentid});
+        CHIData cd = MoodleClient.getAssignments(adminToken, false, false, new int[]{aassignmentid});
         Codehandin chi = cd.courses[0].getCodehandins()[0];
         //System.out.println(chi);
         chi.setup(savepath);
@@ -333,7 +333,7 @@ public class MoodleClientTest {
      */
     @Test
     public void testUploadCodehandin() throws Exception {
-        System.out.println("uploadCodehandin");
+//        System.out.println("uploadCodehandin");
 //        clean();
 //        sometest();
     }
@@ -368,12 +368,12 @@ public class MoodleClientTest {
      */
     @Test
     public void testUploadSubmission() throws Exception {
-        System.out.println("uploadSubmission");
+//        System.out.println("uploadSubmission");
         //CHIData cd = MoodleClient.getAssignments(adminToken, false);        
         //int assignmentid = cd.courses[0].codehandins[0].getId();
-        File zipFile = new File(fileToUpload);
-        boolean test = false, submit = false, legacy = true;
-        UploadReply result = MoodleClient.uploadSubmission(adminToken, zipFile, aassignmentid, test, submit, legacy);
+//        File zipFile = new File(fileToUpload);
+//        boolean test = false, submit = false, legacy = true;
+//        UploadReply result = MoodleClient.uploadSubmission(adminToken, zipFile, aassignmentid, test, submit, legacy);
         //assertEquals(expResult, result);
         // TODO review the generated test code and remove the default call to fail.
         //fail("The test case is a prototype.");
@@ -384,7 +384,7 @@ public class MoodleClientTest {
      */
     @Test
     public void testDownloadAndUnzipAssignmentZip() {
-        System.out.println("downloadAndUnzipAssignmentZip");
+//        System.out.println("downloadAndUnzipAssignmentZip");
 //        String token = "";
 //        int assignmentid = 0;
 //        String savePath = "";
@@ -401,7 +401,7 @@ public class MoodleClientTest {
      */
     @Test
     public void testDownloadAndUnzipGradeAssignmentZip() {
-        System.out.println("downloadAndUnzipGradeAssignmentZip");
+//        System.out.println("downloadAndUnzipGradeAssignmentZip");
 //        String token = "";
 //        int assignmentid = 0;
 //        String savePath = "";

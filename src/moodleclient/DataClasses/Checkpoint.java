@@ -18,30 +18,35 @@ import java.util.HashMap;
 public class Checkpoint {
 
     private int id;
+    private String name;
     private String description;
-    private String runtimeargs;
+    private String runtimeargs;    
     private int ordering;
     private int marks;
+    
+    
     HashMap<Integer, CHITest> testsO = new HashMap<>(); // ordering => test
     private ArrayList<CHITest> tests = new ArrayList<>();
-    HashMap<Integer, Checkpoint> checkpointsO;
+    //HashMap<Integer, Checkpoint> checkpointsO;
     private Checkpoint oldCheckpoint;
     private boolean changed = true;
     private JsonArray deletedts = new JsonArray();
     //private String[] vars = new String[]{"description", "runtimeargs", "ordering", "marks"};
     private Boolean[] changedVars = new Boolean[]{false, false, false, false};
+    Codehandin parentCodehandin;
     private String baseFolder;
 
-    public Checkpoint(int ordering, HashMap<Integer, Checkpoint> checkpointsO, String baseFolder) {
+    public Checkpoint(Codehandin parentCodehandin, int ordering, String baseFolder) {
+        this.parentCodehandin = parentCodehandin;
         this.ordering = ordering;
-        this.checkpointsO = checkpointsO;
         changed = true;
 //            this.delids = delids;
         this.baseFolder = baseFolder;
         changedVars = new Boolean[]{false, false, true, false};
     }
 
-    private Checkpoint(int id, String description, String runtimeargs, int ordering, int marks, HashMap<Integer, CHITest> testsO, Boolean[] changedVars) {
+    private Checkpoint(Codehandin parentCodehandin, int id, String description, String runtimeargs, int ordering, int marks, Boolean[] changedVars) {
+        this.parentCodehandin = parentCodehandin;
         this.id = id;
         this.description = description;
         this.runtimeargs = runtimeargs;
@@ -51,7 +56,8 @@ public class Checkpoint {
         this.changedVars = changedVars;
     }
 
-    public void setup(String baseFolder) {
+    public void setup(Codehandin parentCodehandin, String baseFolder) {
+        this.parentCodehandin = parentCodehandin;
         changedVars = new Boolean[]{false, false, true, false};
         this.baseFolder = baseFolder;
         //System.out.println("cpid " + id + " baseFolder " + baseFolder + " basePath " + basePath);
@@ -59,7 +65,30 @@ public class Checkpoint {
         if (tests != null) {
             for (CHITest t : tests) {
                 testsO.put(t.getOrdering(), t);
-                t.setup(this, baseFolder, testsO);
+                t.setup(this, baseFolder);
+            }
+        }
+    }
+
+    public void setupNoFiles(Codehandin parentCodehandin) {
+        this.parentCodehandin = parentCodehandin;
+        changedVars = new Boolean[]{false, false, true, false};
+        //System.out.println("cpid " + id + " baseFolder " + baseFolder + " basePath " + basePath);
+        testsO = new HashMap<>();
+        if (tests != null) {
+            for (CHITest t : tests) {
+                testsO.put(t.getOrdering(), t);
+                t.setupNoFiles(this);
+            }
+        }
+    }
+
+    public void setupFiles(String baseFolder) {        
+        this.baseFolder = baseFolder;
+        //System.out.println("cpid " + id + " baseFolder " + baseFolder + " basePath " + basePath);
+        if (tests != null) {
+            for (CHITest t : tests) {
+                t.setupFiles(baseFolder);
             }
         }
     }
@@ -72,6 +101,14 @@ public class Checkpoint {
         return (id == 0) ? "n" + ordering : "" + id;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }   
+    
     public String getDescription() {
         return description;
     }
@@ -106,16 +143,17 @@ public class Checkpoint {
         changed = true;
     }
 
-//        public HashMap<Integer, Test> getTests() {
-//            return tests;
-//        }
     public CHITest getTest(int ordering) {
         return testsO.get(ordering);
     }
 
+    public HashMap<Integer, CHITest> getTests() {
+        return testsO;
+    }
+
     public CHITest addNewTest() {
         changed = true;
-        CHITest t = new CHITest(this, baseFolder, testsO);
+        CHITest t = new CHITest(this, baseFolder);
         testsO.put(testsO.size(), t);
         return t;
     }
@@ -156,7 +194,7 @@ public class Checkpoint {
     @Override
     protected Checkpoint clone() throws CloneNotSupportedException {
         super.clone(); // does nothing as extends nothing, if called asks to throw CloneNotSupportedException
-        return new Checkpoint(id, description, runtimeargs, ordering, marks, (HashMap<Integer, CHITest>) testsO.clone(), changedVars);
+        return new Checkpoint(parentCodehandin, id, description, runtimeargs, ordering, marks, changedVars);
     }
 
     /**
@@ -191,7 +229,7 @@ public class Checkpoint {
         // add tests if they have changed
         JsonArray testsJA = new JsonArray();
         testsJA.addAll(deletedts);
-        boolean hasChangedTests = testsJA.size()!=0;
+        boolean hasChangedTests = testsJA.size() != 0;
         for (CHITest aTest : testsO.values()) {
             if (aTest.isChanged()) {
                 testsJA.add(aTest.getJsonChange(fileList, filePathNameList));
@@ -211,7 +249,6 @@ public class Checkpoint {
      * turns this checkpoint into it's JsonString equivalent with any unchanged
      * fields removed
      *
-     * @param deletedFiles
      * @param fileList
      * @param filePathNameList
      * @return this object as a JsonString
@@ -222,7 +259,7 @@ public class Checkpoint {
 
     @Override
     public String toString() {
-        return "Checkpoint{" + "id=" + (id == 0 ? "n" + ordering : id) + ", description=" + description + ", runtimeargs=" + runtimeargs + ", ordering=" + ordering + ", marks=" + marks + ", tests=" + tests + '}';
+        return "Checkpoint{" + "id=" + (id == 0 ? "n" + ordering : id) + ", name=" + name + ", description=" + description + ", runtimeargs=" + runtimeargs + ", ordering=" + ordering + ", marks=" + marks + ", tests=" + tests + '}';
     }
 
     public String getBaseFolder() {
@@ -230,21 +267,50 @@ public class Checkpoint {
     }
 
     /**
+     * moves a test up, since the test orderings increase in number as they go
+     * down, this will decrease the ordering number
+     *
+     * @param test0 the test to move up
+     * @return true if the test is moved or false if it is not
+     */
+    public boolean moveTestUp(CHITest test0) {
+        int tOrdering = test0.getOrdering();
+        if (tOrdering != 0) {// there is another test below
+            CHITest test1 = testsO.get(test0.decreaseOrdering());// get the test below
+            test1.increaseOrdering();
+            testsO.replace(tOrdering - 1, test0);
+            testsO.replace(tOrdering, test1);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * moves a test down, since the test orderings increase in number as they go
+     * down, this will increase the ordering number
+     *
+     * @param test0 the test to move down
+     * @return true if the test is moved or false if it is not
+     */
+    public boolean moveTestDown(CHITest test0) {
+        int tOrdering = test0.getOrdering();
+        if (tOrdering < testsO.size() - 1) {// there is another test above
+            CHITest test1 = testsO.get(test0.increaseOrdering());// get the test below(+1 ordering) by increasing the ordering of this test by 1
+            test1.decreaseOrdering(); // decrease the ordering of the other test
+            testsO.replace(tOrdering - 1, test0);
+            testsO.replace(tOrdering, test1);
+            return true;
+        }
+        return false;
+    }
+    
+        /**
      * moving up decrease the checkpoints ordering
      *
      * @return
      */
     public boolean moveCheckpointUp() {
-        if (ordering != 0) {// there is another checkpoint above
-            //System.out.println("ordering0 " + ordering + " cp size " + checkpointsO.size());
-            Checkpoint checkpoint1 = checkpointsO.get(decreaseOrdering());// get the checkpoint below                
-            //System.out.println("ordering0 " + ordering + " ordering1 " + checkpoint1.ordering);
-            checkpoint1.increaseOrdering();
-            checkpointsO.replace(ordering, this);
-            checkpointsO.replace(ordering + 1, checkpoint1);
-            return true;
-        }
-        return false;
+        return parentCodehandin.moveCheckpointUp(this);
     }
 
     /**
@@ -253,23 +319,16 @@ public class Checkpoint {
      * @return
      */
     public boolean moveCheckpointDown() {
-        if (ordering < checkpointsO.size() - 1) {// there is another checkpoint above
-            Checkpoint checkpoint1 = checkpointsO.get(increaseOrdering());// get the checkpoint below
-            checkpoint1.decreaseOrdering();
-            checkpointsO.replace(ordering, this);
-            checkpointsO.replace(ordering - 1, checkpoint1);
-            return true;
-        }
-        return false;
+        return parentCodehandin.moveCheckpointDown(this);
     }
 
-    private int increaseOrdering() {
+    int increaseOrdering() {
         changed = true;
         changedVars[2] = true;
         return ++ordering;
     }
 
-    private int decreaseOrdering() {
+    int decreaseOrdering() {
         changed = true;
         changedVars[2] = true;
         return --ordering;

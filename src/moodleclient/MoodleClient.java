@@ -42,6 +42,7 @@ import com.google.gson.JsonParser;
 import java.net.ConnectException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import moodleclient.DataClasses.Course;
 import moodleclient.ReplyClasses.*;
 
 /**
@@ -123,11 +124,8 @@ public class MoodleClient {
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
             //out = gson.fromJson(reader, classtype);
             String reply = readInReply(reader);
-//            Gson pgson = new GsonBuilder().setPrettyPrinting().create();
-//            JsonParser jp = new JsonParser();
-//            System.out.println("\treply: \t" + pgson.toJson(jp.parse(reply)));
-            MoodleClient.prettyJsonStringPrint(reply);
-            //System.out.println("\treply: \t" + reply);
+            //MoodleClient.prettyJsonStringPrint(reply);
+            System.out.println("\treply: \t" + reply);
             Gson gson = new Gson();
             out = gson.fromJson(reply, classtype);
         } catch (ConnectException ex) {
@@ -179,7 +177,10 @@ public class MoodleClient {
     }
 
     /**
-     * uploads a zipfile and data (if not legacy) in the form of a JsonString
+     * uploads a zipfile and data (as a JSON string) if dataAsJsonString is not
+     * null. If dataAsJsonString is null then it assumed that server function
+     * cannot handle both a file and data, if so the data should be uploaded
+     * separately using the uploadData function.
      *
      * @param token the token that uniquely identifies the user
      * @param zipFile a zip file containing the assignment or submission files
@@ -188,11 +189,10 @@ public class MoodleClient {
      * @param itemid the id of the file upload (0 for automatic assignment)
      * @param dataAsJsonString the data to upload (codehandin, checkpoint, test
      * or submission info (submit for grading & test now)
-     * @return true if the uploaded succeeded or false if it didn't
+     * @return an UploadReplyLegacyArray object
      * @throws FileNotFoundException
      */
     private static UploadReplyLegacyArray uploadDataAndFiles(String token, File zipFile, String filepath, String filearea, int itemid, String dataAsJsonString, boolean assignment) throws FileNotFoundException { //testFiles or submission files are the only two files to get
-
         System.out.println("UPLOAD filepath " + filepath);
         UploadReplyLegacyArray out = null;
         boolean legacy = dataAsJsonString == null;
@@ -213,9 +213,7 @@ public class MoodleClient {
                     multipart.addFormField("filepath", filepath, false);
                 }
             }
-            //if (itemid != 0) {
             multipart.addFormField("itemid", "" + itemid, false);
-            //}
             if (!legacy) {// don't upload component
                 multipart.addFormField("isAssign", String.valueOf(assignment), false);
                 multipart.addFormField("data", dataAsJsonString, true);
@@ -231,6 +229,22 @@ public class MoodleClient {
             Logger.getLogger(MoodleClient.class.getName()).log(Level.SEVERE, null, ex);
         }
         return out;
+    }
+
+    /**
+     * uploads data to the Moodle server for file testing of assignment updating
+     *
+     * @param token the token that uniquely identifies the user
+     * @param function the function to call on the web service
+     * @param dataAsJsonString the data to upload (codehandin, checkpoint, test
+     * or submission info (submit for grading & test now)
+     * @return
+     */
+    private static UploadReply uploadData(String token, String function, String dataAsJsonString) {
+        return aJSONRequest(webservice_script, new String[][]{
+            {"wstoken", token},
+            {"wsfunction", function},
+            {"codehandin", dataAsJsonString}}, UploadReply.class);
     }
 
     /**
@@ -251,17 +265,9 @@ public class MoodleClient {
         if (zipFile != null) {
             UploadReplyLegacyArray ur = uploadDataAndFiles(token, zipFile, "/", CODEHANDIN_TEMP_FILEAREA, assignmentid, legacy ? null : dataAsJsonString, true);
             System.out.println(ur);
-//        try {// wait for the upload to finish ?
-//            Thread.sleep(10000);                 //1000 milliseconds is one second.
-//        } catch (InterruptedException ex) {
-//            Thread.currentThread().interrupt();
-//        }
         }
         if (legacy) {// upload data seperatly
-            return aJSONRequest(webservice_script, new String[][]{
-                {"wstoken", token},
-                {"wsfunction", update_codehandin},
-                {"codehandin", dataAsJsonString}}, UploadReply.class);
+            return uploadData(token, update_codehandin, dataAsJsonString);
         }
         return null;
     }
@@ -297,10 +303,7 @@ public class MoodleClient {
         dataAsJsonString += "}";
         System.out.println(dataAsJsonString);
         if (legacy) {// upload data seperatly
-            return aJSONRequest(webservice_script, new String[][]{
-                {"wstoken", token},
-                {"wsfunction", set_and_test_submission},
-                {"submissioninfo", dataAsJsonString}}, UploadReply.class);
+            return uploadData(token, dataAsJsonString, dataAsJsonString);
         }
         return null;
     }
@@ -332,7 +335,7 @@ public class MoodleClient {
      * @return the details of an assignment as JsonObject
      */
     public static CHIData getAssignments(String token) {
-        return getAssignments(token, true, new int[]{});
+        return getAssignments(token, true, false, new int[]{});
     }
 
     /**
@@ -340,10 +343,11 @@ public class MoodleClient {
      * and test details)
      *
      * @param token the token that uniquely identifies the user
+     * @param getproglang if true will attach a list of supported programming languages
      * @return the details of an assignment as JsonObject
      */
-    public static CHIData getAssignmentsAll(String token) {
-        return getAssignments(token, false, new int[]{});
+    public static CHIData getAssignmentsAll(String token, boolean getproglang) {
+        return getAssignments(token, false, getproglang, new int[]{});
     }
 
     /**
@@ -353,16 +357,18 @@ public class MoodleClient {
      * @param token the token that uniquely identifies the user
      * @param basic true - minimal details, false - all details (includes
      * checkpoints and test details)
+     * @param getproglang if true will attach a list of supported programming languages
      * @param assignmentids the ids of the assignments to get details for
      * @return the details of an assignment as JsonObject
      */
-    public static CHIData getAssignments(String token, boolean basic, int[] assignmentids) {
+    public static CHIData getAssignments(String token, boolean basic, boolean getproglang, int[] assignmentids) {
         String[][] qps = new String[assignmentids.length + 3][2];
         qps[0] = new String[]{"wstoken", token};
         qps[1] = new String[]{"wsfunction", fetch_assignments};
         qps[2] = new String[]{"basic", (basic ? "1" : "0")};
+        qps[3] = new String[]{"getproglang", (getproglang ? "1" : "0")};
         for (int i = 0; i < (assignmentids.length); i++) {
-            qps[3 + i] = new String[]{"assignmentids[" + i + "]", Integer.toString(assignmentids[i])};
+            qps[4 + i] = new String[]{"assignmentids[" + i + "]", Integer.toString(assignmentids[i])};
         }
         return aJSONRequest(webservice_script, qps, CHIData.class);
     }

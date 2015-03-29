@@ -22,6 +22,7 @@ import javafx.scene.control.TreeView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
@@ -29,6 +30,10 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.Duration;
+import moodleclient.DataClasses.CHITest;
+import moodleclient.DataClasses.Checkpoint;
+import moodleclient.DataClasses.Codehandin;
+import moodleclient.DataClasses.Course;
 import moodleclient.MoodleClient;
 import moodleclient.ReplyClasses.*;
 import static moodleclient.ReplyClasses.readFile;
@@ -47,6 +52,7 @@ public class NewFXSwingMain extends Application {
     private String token;
     private static NewFXSwingMain instance;
     protected Text textStatus = new Text();
+    private Proglang[] proglangs;
 
     ;
 
@@ -91,7 +97,8 @@ public class NewFXSwingMain extends Application {
 
     /**
      * generates the logIn Scene
-     * @return 
+     *
+     * @return
      */
     public Scene logInScene() {
         primaryStage.setTitle("CHI builder - login");
@@ -159,7 +166,7 @@ public class NewFXSwingMain extends Application {
     /**
      * performs the login and error handling
      */
-    public class LoginTask extends Task<Void> {
+    public class LoginTask extends Task<Integer> {
 
         String username, password;
         ReplyMoodleToken tokenObject;
@@ -169,14 +176,37 @@ public class NewFXSwingMain extends Application {
         int assignmentid;
         int[] assignmentids;
         int mode;
-        boolean basic = true, error = false;
+        boolean basic = true, getProglangs = true, error = false;
         String errorText;
+        /**
+         * the state of the task 0 for just started 1 for has logged in 2 for
+         * has gotten assignments
+         */
+        int state;
 
+        /**
+         *
+         * @param username
+         * @param password
+         * @param textStatus
+         * @param primaryStage
+         */
         public LoginTask(String username, String password, Text textStatus, Stage primaryStage) {
             this.username = username;
             this.password = password;
             this.textStatus = textStatus;
             this.primaryStage = primaryStage;
+            mode = 0;
+        }
+
+        /**
+         * get all assignments - the default method
+         *
+         * @param proglang
+         */
+        public void setGetAllAssignments(boolean proglang) {
+            this.getProglangs = proglang;
+            mode = 0;
         }
 
         public void setAssignmentid(int assignmentid) {
@@ -185,13 +215,10 @@ public class NewFXSwingMain extends Application {
             mode = 1;
         }
 
-        public void setGetAllAssignments() {
-            mode = 0;
-        }
-
-        public void setAssignmentids(int[] assignmentids, boolean basic) {
+        public void setAssignmentids(int[] assignmentids, boolean basic, boolean proglang) {
             this.assignmentids = assignmentids;
             this.basic = basic;
+            this.getProglangs = proglang;
             mode = 2;
         }
 
@@ -219,13 +246,16 @@ public class NewFXSwingMain extends Application {
          ]
          */
         @Override
-        protected Void call() throws Exception {
+        protected Integer call() throws Exception {
+            if (state != 2) {
+                return state;
+            }
             error = false;
             if (token == null) {
                 tokenObject = MoodleClient.getToken(username, password);
                 if (tokenObject.token != null) {
                     token = tokenObject.token;
-                    cd = MoodleClient.getAssignments(token);
+                    cd = MoodleClient.getAssignmentsAll(token, true);
                 } else {
                     error = true;
                     if (tokenObject.error != null) {
@@ -240,8 +270,8 @@ public class NewFXSwingMain extends Application {
                 }
             } else if (mode == 0) {
                 cd = MoodleClient.getAssignments(token);
-            } else {
-                cd = MoodleClient.getAssignments(token, basic, (mode == 1) ? new int[]{assignmentid} : assignmentids);
+            } else { // mode 1 or 2
+                cd = MoodleClient.getAssignments(token, basic, getProglangs, (mode == 1) ? new int[]{assignmentid} : assignmentids);
             }
             if (cd != null) {
                 if (cd.courses == null) {
@@ -270,7 +300,11 @@ public class NewFXSwingMain extends Application {
                 textStatus.setText(cd.error);
             } else if (cd.courses != null) {
                 textStatus.setText("going to assignment screen");
-                primaryStage.setScene(getAssignmentSelectorScene());
+                if (getProglangs) {
+                    proglangs = cd.proglangs;
+                    getProglangs = false;
+                }
+                primaryStage.setScene(getAssignmentSelectorScene(cd.courses));
                 primaryStage.hide();
                 primaryStage.show();
             } else {
@@ -281,76 +315,50 @@ public class NewFXSwingMain extends Application {
 
     /**
      * generates the assignment display scene
-     * @return 
+     *
+     * @return
      */
-    private Scene getAssignmentSelectorScene() {
+    private Scene getAssignmentSelectorScene(Course[] courses) {
 
+        GridPane grid = new GridPane();
+        grid.setMinHeight(990);
+        grid.setMinWidth(1900);
+
+        TreeItem<ItemShell> rootNode = new TreeItem<>(new ItemShell());
         primaryStage.setTitle("CHI builder - Assignment Selector");
 
         // make the labels,fields and buttons
-        TreeItem<String> rootItem = new TreeItem<>("Inbox");
-        rootItem.setExpanded(true);
-        for (int i = 1; i < 6; i++) {
-            TreeItem<String> item = new TreeItem<>("Message" + i);
-            rootItem.getChildren().add(item);
+        for (Course aCourse : courses) {
+            TreeItem<ItemShell> aCourseTreeItem = new TreeItem<>(new ItemShell(aCourse));
+            for (Codehandin aCHI : aCourse.getCodehandins()) {
+                aCHI.setupNoFiles();
+                TreeItem<ItemShell> aCHITreeItem = new TreeItem<>(new ItemShell(aCHI));
+                for (Checkpoint cp : aCHI.getCheckpoints().values()) {
+                    TreeItem<ItemShell> cpTreeItem = new TreeItem<>(new ItemShell(cp));
+                    for (CHITest t : cp.getTests().values()) {
+                        cpTreeItem.getChildren().add(new TreeItem<>(new ItemShell(t)));
+                    }
+                    aCHITreeItem.getChildren().add(cpTreeItem);
+                }
+                aCourseTreeItem.getChildren().add(aCHITreeItem);
+            }
+            rootNode.getChildren().add(aCourseTreeItem);
         }
-        TreeView<String> tree = new TreeView<>(rootItem);
-        tree.setCellFactory(new Callback<TreeView<String>, TreeCell<String>>() {
+
+        TreeView<ItemShell> treeView = new TreeView<>(rootNode);
+        treeView.setShowRoot(false);
+        treeView.setMinSize(1400, 700);
+        //treeView.setMaxSize(val, val);
+        treeView.setCellFactory(new Callback<TreeView<ItemShell>, TreeCell<ItemShell>>() {
             @Override
-            public TreeCell<String> call(TreeView<String> stringTreeView) {
-                TreeCell<String> treeCell = new TreeCell<String>() {
-                    @Override
-                    protected void updateItem(String item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null) {
-                            setText(item);
-                        }
-                    }
-                };
-
-                treeCell.setOnDragDetected(new EventHandler<MouseEvent>() {
-                    @Override
-                    public void handle(MouseEvent mouseEvent) {
-
-                    }
-                });
-
-                return treeCell;
+            public TreeCell<ItemShell> call(TreeView<ItemShell> p) {
+                return new ItemShellTreeCell();
             }
         });
+        grid.add(treeView, 0, 0);
 
-        //root.getChildren().add(tree);
-        Text textTitle = new Text("Welcome");
-        textTitle.setFont(Font.font("Tahoma", FontWeight.NORMAL, 20));
-        Label labelAssignmentids = new Label("Assignment id or :");
-
-        Label labelBasic = new Label("Checkpoints & Test:");
-        TextField textFieldFAN = new TextField();
-
-        PasswordField passwordFieldFANPassword = new PasswordField();
-        Button buttonSignIn = new Button("Sign in");
-        //put the sign in button on the RHS in its own HBox
-        HBox hBoxButtonSignIn = new HBox(10);
-        hBoxButtonSignIn.setAlignment(Pos.BOTTOM_RIGHT);
-        hBoxButtonSignIn.getChildren().add(buttonSignIn);
-
-        // make a login loop animation    
-        Text textStatus = new Text();
-        textStatus.setText("    ");
-
-        GridPane grid = new GridPane();
-        grid.setAlignment(Pos.CENTER);
-        grid.setHgap(10);// h gap between components
-        grid.setVgap(10);// v gap between components
-        grid.setPadding(new Insets(25, 25, 25, 25)); // gap around the grid
-        grid.add(textTitle, 0, 0, 2, 1);
-        grid.add(labelAssignmentids, 0, 1);
-        grid.add(textFieldFAN, 1, 1);
-        grid.add(labelBasic, 0, 2);
-        grid.add(passwordFieldFANPassword, 1, 2);
-        grid.add(hBoxButtonSignIn, 1, 4);
-        grid.add(tree, 0, 3, 2, 1);
-
+//        primaryStage.setHeight(1000);
+//        primaryStage.setWidth(1850);
         return new Scene(grid);
     }
 

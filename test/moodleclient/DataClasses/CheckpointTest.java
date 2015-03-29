@@ -40,18 +40,6 @@ public class CheckpointTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of setup method, of class Checkpoint.
-     */
-    @Test
-    public void testSetup() {
-        System.out.println("setup");
-        String baseFolder = "";
-        Checkpoint instance = null;
-        instance.setup(baseFolder);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
 
     /**
      * Test of getId method, of class Checkpoint.
@@ -319,34 +307,6 @@ public class CheckpointTest {
         Checkpoint instance = null;
         String expResult = "";
         String result = instance.getBaseFolder();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
-
-    /**
-     * Test of moveCheckpointUp method, of class Checkpoint.
-     */
-    @Test
-    public void testMoveCheckpointUp() {
-        System.out.println("moveCheckpointUp");
-        Checkpoint instance = null;
-        boolean expResult = false;
-        boolean result = instance.moveCheckpointUp();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
-
-    /**
-     * Test of moveCheckpointDown method, of class Checkpoint.
-     */
-    @Test
-    public void testMoveCheckpointDown() {
-        System.out.println("moveCheckpointDown");
-        Checkpoint instance = null;
-        boolean expResult = false;
-        boolean result = instance.moveCheckpointDown();
         assertEquals(expResult, result);
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");

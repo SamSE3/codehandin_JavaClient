@@ -63,8 +63,26 @@ public class Codehandin {
         this.baseFolder = baseFolder + id + "/a/";
         if (checkpoints != null) {
             for (Checkpoint cp : checkpoints) {
-                cp.setup(this.baseFolder);
+                cp.setup(this, this.baseFolder);
                 checkpointsO.put(cp.getOrdering(), cp);
+            }
+        }
+    }
+
+    public void setupNoFiles() {
+        if (checkpoints != null) {
+            for (Checkpoint cp : checkpoints) {
+                cp.setupNoFiles(this);
+                checkpointsO.put(cp.getOrdering(), cp);
+            }
+        }
+    }
+
+    public void setupFiles(String baseFolder) {
+        this.baseFolder = baseFolder + id + "/a/";
+        if (checkpoints != null) {
+            for (Checkpoint cp : checkpoints) {
+                cp.setupFiles(this.baseFolder);
             }
         }
     }
@@ -160,7 +178,7 @@ public class Codehandin {
         cpschanged = true;
         //System.out.println("cps " + checkpointsO);
         //System.out.println("cps pre add " + checkpointsO.size());
-        Checkpoint cp = new Checkpoint(checkpointsO.size(), checkpointsO, baseFolder);
+        Checkpoint cp = new Checkpoint(this, checkpointsO.size(), baseFolder);
         checkpointsO.put(checkpointsO.size(), cp);
         //System.out.println("cps post add " + checkpointsO.size());
         return cp;
@@ -278,8 +296,45 @@ public class Codehandin {
         return getChangeData().changeData.getAsString();
     }
 
+    /**
+     * moving up decrease the checkpoints ordering
+     *
+     * @return
+     */
+    public boolean moveCheckpointUp(Checkpoint checkpoint0) {
+        int cpOrdering = checkpoint0.getOrdering();
+        if (cpOrdering != 0) {// there is another checkpoint above
+            //System.out.println("ordering0 " + ordering + " cp size " + checkpointsO.size());
+            Checkpoint checkpoint1 = checkpointsO.get(checkpoint0.decreaseOrdering());// get the checkpoint below                
+            //System.out.println("ordering0 " + ordering + " ordering1 " + checkpoint1.ordering);
+            checkpoint1.increaseOrdering();
+            checkpointsO.replace(cpOrdering - 1, checkpoint0);
+            checkpointsO.replace(cpOrdering, checkpoint1);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * moving down increases the checkpoints ordering
+     *
+     * @return
+     */
+    public boolean moveCheckpointDown(Checkpoint checkpoint0) {
+        int cpOrdering = checkpoint0.getOrdering();
+        if (cpOrdering < checkpointsO.size() - 1) {// there is another checkpoint above
+            Checkpoint checkpoint1 = checkpointsO.get(checkpoint0.increaseOrdering());// get the checkpoint below
+            checkpoint1.decreaseOrdering();
+            checkpointsO.replace(cpOrdering + 1, checkpoint0);
+            checkpointsO.replace(cpOrdering, checkpoint1);
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public String toString() {
-        return "Codehandin{" + "id=" + id + ", assignname=" + assignname + ", intro=" + intro + ", duedate=" + duedate + ", funcpercen=" + funcpercent + ", spectestonly=" + spectestonly + ", mustattemptcompile=" + mustattemptcompile + ", proglang=" + proglang + ", proglangid=" + proglangid + ", checkpoints0=" + checkpointsO + ", checkpoints=" + checkpoints + '}';
+        return "Codehandin{" + "id=" + id + ", assignname=" + assignname + ", intro=" + intro + ", duedate=" + duedate + ", funcpercent=" + funcpercent + ", spectestonly=" + spectestonly + ", mustattemptcompile=" + mustattemptcompile + ", proglang=" + proglang + ", proglangid=" + proglangid + ", checkpoints0=" + checkpointsO + ", checkpoints=" + checkpoints + '}';
     }
+
 }
