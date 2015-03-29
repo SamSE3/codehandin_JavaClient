@@ -9,6 +9,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 /**
@@ -20,11 +21,10 @@ public class Checkpoint {
     private int id;
     private String name;
     private String description;
-    private String runtimeargs;    
+    private String runtimeargs;
     private int ordering;
     private int marks;
-    
-    
+
     HashMap<Integer, CHITest> testsO = new HashMap<>(); // ordering => test
     private ArrayList<CHITest> tests = new ArrayList<>();
     //HashMap<Integer, Checkpoint> checkpointsO;
@@ -83,7 +83,7 @@ public class Checkpoint {
         }
     }
 
-    public void setupFiles(String baseFolder) {        
+    public void setupFiles(String baseFolder) {
         this.baseFolder = baseFolder;
         //System.out.println("cpid " + id + " baseFolder " + baseFolder + " basePath " + basePath);
         if (tests != null) {
@@ -107,8 +107,8 @@ public class Checkpoint {
 
     public void setName(String name) {
         this.name = name;
-    }   
-    
+    }
+
     public String getDescription() {
         return description;
     }
@@ -259,7 +259,7 @@ public class Checkpoint {
 
     @Override
     public String toString() {
-        return "Checkpoint{" + "id=" + (id == 0 ? "n" + ordering : id) + ", name=" + name + ", description=" + description + ", runtimeargs=" + runtimeargs + ", ordering=" + ordering + ", marks=" + marks + ", tests=" + tests + '}';
+        return "Checkpoint{" + "id=" + (id == 0 ? "n" + ordering : id) + ", name=" + name + ", description=" + description + ", runtimeargs=" + runtimeargs + ", ordering=" + ordering + ", marks=" + marks + ", tests=" + Arrays.toString(testsO.values().toArray()) + '}';
     }
 
     public String getBaseFolder() {
@@ -303,8 +303,8 @@ public class Checkpoint {
         }
         return false;
     }
-    
-        /**
+
+    /**
      * moving up decrease the checkpoints ordering
      *
      * @return

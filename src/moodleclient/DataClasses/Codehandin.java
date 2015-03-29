@@ -10,6 +10,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import moodleclient.ReplyClasses.*;
 import moodleclient.ZipUtility;
@@ -334,7 +335,7 @@ public class Codehandin {
 
     @Override
     public String toString() {
-        return "Codehandin{" + "id=" + id + ", assignname=" + assignname + ", intro=" + intro + ", duedate=" + duedate + ", funcpercent=" + funcpercent + ", spectestonly=" + spectestonly + ", mustattemptcompile=" + mustattemptcompile + ", proglang=" + proglang + ", proglangid=" + proglangid + ", checkpoints0=" + checkpointsO + ", checkpoints=" + checkpoints + '}';
+        return "Codehandin{" + "id=" + id + ", assignname=" + assignname + ", intro=" + intro + ", duedate=" + duedate + ", funcpercent=" + funcpercent + ", spectestonly=" + spectestonly + ", mustattemptcompile=" + mustattemptcompile + ", proglang=" + proglang + ", proglangid=" + proglangid + ", checkpoints0=" + Arrays.toString(checkpointsO.values().toArray()) + '}';
     }
 
 }

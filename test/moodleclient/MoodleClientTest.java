@@ -96,24 +96,16 @@ public class MoodleClientTest {
      */
     @Test
     public void testGetAssignments_3args() {
-//        System.out.println("getAssignments_3args");
-//        CHIData cd = MoodleClient.getAssignments(adminToken, true, new int[]{impossibleassignmentid});
-//        System.out.println(cd);
-//        if (cd.warnings == null) {
-//            fail("should have warning messages");
-//        } else {
-//            assertEquals("", cd.warnings[0].warningcode, "noIDorPermission");
-//        }
-//        assertNotNull("should have warning messages", cd.warnings);
-//        //cd = MoodleClient.getAssignments(adminToken, true, new int[]{assignmentid});
-//        cd = MoodleClient.getAssignments(adminToken, false, new int[]{impossibleassignmentid});
-//        if (cd.warnings == null) {
-//            fail("should have warning messages");
-//        } else {
-//            assertEquals("", cd.warnings[0].warningcode, "noIDorPermission");
-//        }
-//        assertNotNull("", cd.warnings);
-        //cd = MoodleClient.getAssignments(adminToken, false, new int[]{assignmentid});
+        System.out.println("getAssignments_3args");
+        CHIData cd = MoodleClient.getAssignments(adminToken, true, true, new int[]{impossibleassignmentid});
+        System.out.println(cd);
+        if (cd.warnings == null) {
+            fail("should have warning messages");
+        } else {
+            assertEquals("", cd.warnings[0].warningcode, "noIDorPermission");
+        }
+        assertNotNull("should have warning messages", cd.warnings);
+        cd = MoodleClient.getAssignments(adminToken, true, true, new int[]{aassignmentid});
     }
 
     /**

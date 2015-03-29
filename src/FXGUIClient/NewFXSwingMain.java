@@ -116,6 +116,7 @@ public class NewFXSwingMain extends Application {
         hBoxButtonSignIn.setAlignment(Pos.BOTTOM_RIGHT);
         hBoxButtonSignIn.getChildren().add(buttonSignIn);
 
+        // REMOVE THIS ON ROLLOUT - AUTO-FILL FOR TESTING
         textFieldFAN.setText(adminUN);
         passwordFieldFANPassword.setText(adminPW);
 
@@ -127,7 +128,7 @@ public class NewFXSwingMain extends Application {
                 textStatus.setText("no username input");
             } else if (passwordFieldFANPassword.getText().isEmpty()) {
                 textStatus.setText("no password input");
-            } //            else if (!PATTERNUSERNAMEFORM.matcher(textFieldFAN.getText()).matches()) {
+            } //            else if (!PATTERNUSERNAMEFORM.matcher(textFieldFAN.getText()).matches()) { // check is in proper FAN format
             //                textStatus.setText("impossible username");
             //            } 
             else {
@@ -156,11 +157,8 @@ public class NewFXSwingMain extends Application {
         grid.add(hBoxButtonSignIn, 1, 3);
         grid.add(textStatus, 0, 4, 2, 1);
 
-        // make the scene
+        // return the scene
         return new Scene(grid);
-
-//        primaryStage.setScene(scene);
-//        primaryStage.show();
     }
 
     /**
@@ -197,21 +195,23 @@ public class NewFXSwingMain extends Application {
             this.textStatus = textStatus;
             this.primaryStage = primaryStage;
             mode = 0;
+            getProglangs = true;
         }
 
         /**
          * get all assignments - the default method
          *
-         * @param proglang
+         * @param getProglangs
          */
-        public void setGetAllAssignments(boolean proglang) {
-            this.getProglangs = proglang;
+        public void setGetAllAssignments(boolean getProglangs) {
+            this.getProglangs = getProglangs;
             mode = 0;
         }
 
         public void setAssignmentid(int assignmentid) {
             this.assignmentid = assignmentid;
             basic = false;
+            getProglangs = false;
             mode = 1;
         }
 
@@ -247,15 +247,11 @@ public class NewFXSwingMain extends Application {
          */
         @Override
         protected Integer call() throws Exception {
-            if (state != 2) {
-                return state;
-            }
             error = false;
             if (token == null) {
                 tokenObject = MoodleClient.getToken(username, password);
-                if (tokenObject.token != null) {
+                if (tokenObject.token != null) {// tokenObject should never be null
                     token = tokenObject.token;
-                    cd = MoodleClient.getAssignmentsAll(token, true);
                 } else {
                     error = true;
                     if (tokenObject.error != null) {
@@ -268,25 +264,32 @@ public class NewFXSwingMain extends Application {
                         errorText = "unknown error? no error or token returned";
                     }
                 }
-            } else if (mode == 0) {
-                cd = MoodleClient.getAssignments(token);
-            } else { // mode 1 or 2
-                cd = MoodleClient.getAssignments(token, basic, getProglangs, (mode == 1) ? new int[]{assignmentid} : assignmentids);
-            }
-            if (cd != null) {
-                if (cd.courses == null) {
-                    error = true;
-                    if (cd.error != null) {
-                        errorText = "unknown error? no error/token returned";
-                    } else {
-                        if (cd.error.length() > 28) {
-                            errorText = cd.error.substring(0, 28) + "...";
-                        } else {
-                            errorText = cd.error;
+            } else { // token is ok ... now get the assignments
+                if (mode == 0) {
+                    cd = MoodleClient.getAssignmentsAll(token, getProglangs);
+                } else { // mode 1 or 2
+                    cd = MoodleClient.getAssignments(token, basic, getProglangs, (mode == 1) ? new int[]{assignmentid} : assignmentids);
+                }
+                // handle the reply
+                if (cd != null) { // if there is a reply                    
+                    if (cd.courses == null) { // if there are no course ... errors
+                        error = true;
+                        if (cd.error != null) { // there is an error to show 
+                            if (cd.error.length() > 28) {
+                                errorText = cd.error.substring(0, 28) + "...";
+                            } else {
+                                errorText = cd.error;
+                            }
+                        } else { // else throw an unknown error message
+                            errorText = "unknown error? no error/token returned";
                         }
                     }
+                } else { // there is no reply? throw an unknown error message
+                    error = true;
+                    errorText = "server replied with nothing?";
                 }
             }
+
             return null;
         }
 
@@ -296,8 +299,8 @@ public class NewFXSwingMain extends Application {
             timelineSignIn.stop();
             if (error) { // there is an error in getting tokens
                 textStatus.setText(errorText);
-            } else if (cd.error != null) {
-                textStatus.setText(cd.error);
+            } else if (cd == null) {
+                textStatus.setText("the task was never called");
             } else if (cd.courses != null) {
                 textStatus.setText("going to assignment screen");
                 if (getProglangs) {
