@@ -170,7 +170,7 @@ public class CodehandinTest {
         System.out.println("getDuedate");
         Codehandin instance = new Codehandin();
         int expResult = 0;
-        int result = instance.getDuedate();
+        long result = instance.getDuedate();
         assertEquals(expResult, result);
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");

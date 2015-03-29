@@ -194,8 +194,8 @@ public class ReplyClasses {
 
     public static class Proglang {
 
-        int id;
-        String name;
+        public int id;
+        public String name;
     }
 
     public static class FileDescriptions extends MoodleDataException {

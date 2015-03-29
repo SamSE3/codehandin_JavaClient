@@ -42,6 +42,7 @@ import com.google.gson.JsonParser;
 import java.net.ConnectException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import moodleclient.DataClasses.Course;
 import moodleclient.ReplyClasses.*;
 
@@ -343,7 +344,8 @@ public class MoodleClient {
      * and test details)
      *
      * @param token the token that uniquely identifies the user
-     * @param getproglang if true will attach a list of supported programming languages
+     * @param getproglang if true will attach a list of supported programming
+     * languages
      * @return the details of an assignment as JsonObject
      */
     public static CHIData getAssignmentsAll(String token, boolean getproglang) {
@@ -357,7 +359,8 @@ public class MoodleClient {
      * @param token the token that uniquely identifies the user
      * @param basic true - minimal details, false - all details (includes
      * checkpoints and test details)
-     * @param getproglang if true will attach a list of supported programming languages
+     * @param getproglang if true will attach a list of supported programming
+     * languages
      * @param assignmentids the ids of the assignments to get details for
      * @return the details of an assignment as JsonObject
      */
@@ -603,9 +606,9 @@ public class MoodleClient {
      * @param timestamp the time stamp to convert
      * @return String a string representation of the date
      */
-    public static String convertToDateString(String timestamp) {
+    public static String convertToDateString(long timestamp) {
         Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(Integer.getInteger(timestamp) * 1000);
+        calendar.setTimeInMillis(timestamp * 1000);
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
         return sdf.format(calendar.getTime());
     }

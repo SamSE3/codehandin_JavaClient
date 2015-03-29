@@ -26,7 +26,7 @@ public class Codehandin {
     private int contextid;
     private String assignname;
     private String intro;
-    private int duedate;
+    private long duedate;
     private int funcpercent;
     private boolean spectestonly;
     /*
@@ -114,7 +114,7 @@ public class Codehandin {
         changed = true;
     }
 
-    public int getDuedate() {
+    public long getDuedate() {
         return duedate;
     }
 

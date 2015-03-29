@@ -202,10 +202,7 @@ public class CHITest {
     }
 
     public String getInput() {
-        if (ioastext) {
-            return input;
-        }
-        return readFile(inputFile);
+        return input;
     }
 
     public boolean setInput(String input) {
@@ -219,10 +216,7 @@ public class CHITest {
     }
 
     public String getOutput() {
-        if (ioastext) {
-            return output;
-        }
-        return readFile(outputFile);
+        return output;
     }
 
     public boolean setOutput(String output) {
@@ -236,10 +230,7 @@ public class CHITest {
     }
 
     public String getOutputerr() {
-        if (ioastext) {
-            return outputerr;
-        }
-        return readFile(outputerrFile);
+        return outputerr;
     }
 
     public boolean setOutputerr(String outputerr) {
@@ -250,6 +241,30 @@ public class CHITest {
             return true;
         }
         return false;
+    }
+
+    public File getInputFile() {
+        return inputFile;
+    }
+
+    public File getOutputFile() {
+        return outputFile;
+    }
+
+    public File getOutputerrFile() {
+        return outputerrFile;
+    }
+
+    public String getInputFileContents() {
+        return readFile(inputFile);
+    }
+
+    public String getOutputFileContents() {
+        return readFile(outputFile);
+    }
+
+    public String getOutputerrFileContents() {
+        return readFile(outputerrFile);
     }
 
     /**

@@ -40,7 +40,7 @@ import static moodleclient.ReplyClasses.readFile;
 
 public class NewFXSwingMain extends Application {
 
-    private String adminUN = "aadmin", adminPW = "aadminA!1";
+    private final String adminUN = "aadmin", adminPW = "aadminA!1";
 
     private Stage primaryStage;
     //private User loggedUser;
@@ -52,9 +52,6 @@ public class NewFXSwingMain extends Application {
     private String token;
     private static NewFXSwingMain instance;
     protected Text textStatus = new Text();
-    private Proglang[] proglangs;
-
-    ;
 
     public static NewFXSwingMain getInstance() {
         return instance;
@@ -102,6 +99,7 @@ public class NewFXSwingMain extends Application {
      */
     public Scene logInScene() {
         primaryStage.setTitle("CHI builder - login");
+        primaryStage.setResizable(true);
 
         // make the labels,fields and buttons
         Text textTitle = new Text("Welcome");
@@ -264,30 +262,30 @@ public class NewFXSwingMain extends Application {
                         errorText = "unknown error? no error or token returned";
                     }
                 }
-            } else { // token is ok ... now get the assignments
-                if (mode == 0) {
-                    cd = MoodleClient.getAssignmentsAll(token, getProglangs);
-                } else { // mode 1 or 2
-                    cd = MoodleClient.getAssignments(token, basic, getProglangs, (mode == 1) ? new int[]{assignmentid} : assignmentids);
-                }
-                // handle the reply
-                if (cd != null) { // if there is a reply                    
-                    if (cd.courses == null) { // if there are no course ... errors
-                        error = true;
-                        if (cd.error != null) { // there is an error to show 
-                            if (cd.error.length() > 28) {
-                                errorText = cd.error.substring(0, 28) + "...";
-                            } else {
-                                errorText = cd.error;
-                            }
-                        } else { // else throw an unknown error message
-                            errorText = "unknown error? no error/token returned";
-                        }
-                    }
-                } else { // there is no reply? throw an unknown error message
+            }
+            // token is ok  ... now get the assignments
+            if (mode == 0) {
+                cd = MoodleClient.getAssignmentsAll(token, getProglangs);
+            } else { // mode 1 or 2
+                cd = MoodleClient.getAssignments(token, basic, getProglangs, (mode == 1) ? new int[]{assignmentid} : assignmentids);
+            }
+            // handle the reply
+            if (cd != null) { // if there is a reply                    
+                if (cd.courses == null) { // if there are no course ... errors
                     error = true;
-                    errorText = "server replied with nothing?";
+                    if (cd.error != null) { // there is an error to show 
+                        if (cd.error.length() > 28) {
+                            errorText = cd.error.substring(0, 28) + "...";
+                        } else {
+                            errorText = cd.error;
+                        }
+                    } else { // else throw an unknown error message
+                        errorText = "unknown error? no error/token returned";
+                    }
                 }
+            } else { // there is no reply? throw an unknown error message
+                error = true;
+                errorText = "server replied with nothing?";
             }
 
             return null;
@@ -303,8 +301,14 @@ public class NewFXSwingMain extends Application {
                 textStatus.setText("the task was never called");
             } else if (cd.courses != null) {
                 textStatus.setText("going to assignment screen");
-                if (getProglangs) {
-                    proglangs = cd.proglangs;
+                if (cd.proglangs != null) {
+                    String[] proglangNames = new String[cd.proglangs.length];
+                    for (Proglang pl : cd.proglangs) {
+                        proglangNames[pl.id - 1] = pl.name;
+                    }
+
+                    ItemShellTreeCell.proglangs = cd.proglangs;
+                    ItemShellTreeCell.proglangsNames = proglangNames;
                     getProglangs = false;
                 }
                 primaryStage.setScene(getAssignmentSelectorScene(cd.courses));
@@ -324,8 +328,8 @@ public class NewFXSwingMain extends Application {
     private Scene getAssignmentSelectorScene(Course[] courses) {
 
         GridPane grid = new GridPane();
-        grid.setMinHeight(990);
-        grid.setMinWidth(1900);
+        grid.setMinHeight(900);
+        grid.setMinWidth(1800);
 
         TreeItem<ItemShell> rootNode = new TreeItem<>(new ItemShell());
         primaryStage.setTitle("CHI builder - Assignment Selector");
@@ -350,7 +354,8 @@ public class NewFXSwingMain extends Application {
 
         TreeView<ItemShell> treeView = new TreeView<>(rootNode);
         treeView.setShowRoot(false);
-        treeView.setMinSize(1400, 700);
+        treeView.setEditable(true);
+        treeView.setMinSize(1220, 700);
         //treeView.setMaxSize(val, val);
         treeView.setCellFactory(new Callback<TreeView<ItemShell>, TreeCell<ItemShell>>() {
             @Override

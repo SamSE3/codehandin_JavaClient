@@ -5,20 +5,21 @@
  */
 package FXGUIClient;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TreeCell;
 import javafx.scene.layout.GridPane;
-import javafx.scene.text.Text;
+import javafx.scene.layout.HBox;
 import moodleclient.DataClasses.CHITest;
 import moodleclient.DataClasses.Checkpoint;
 import moodleclient.DataClasses.Codehandin;
 import moodleclient.DataClasses.Course;
+import moodleclient.ReplyClasses.Proglang;
+import moodleclient.MoodleClient;
 
 /**
  *
@@ -26,42 +27,48 @@ import moodleclient.DataClasses.Course;
  */
 public class ItemShellTreeCell extends TreeCell<ItemShell> {
 
-    private static ArrayList<ItemShellTreeCell> shtcs;
-    private static ArrayList<String> coids;
-    private static ArrayList<String> cids;
-    private static ArrayList<String> cpids;
-    private static ArrayList<String> tids;
+    public static Proglang[] proglangs;
+    public static String[] proglangsNames;
+//    private static ArrayList<ItemShellTreeCell> shtcs;
+//    private static ArrayList<String> coids;
+//    private static ArrayList<String> cids;
+//    private static ArrayList<String> cpids;
+//    private static ArrayList<String> tids;
     private int oldid;
 
     private GridPane grid;
     private int oldtype, newtype;
-    private boolean notrun = true;
 
     //generic fields
     private Label labelId, labelOrd, labelName, labelIntroDesc;
-    private Text textId, textOrd, textName, textIntroDesc;
+    private TextField textName, textIntroDesc;
 
     //course fields
     // just an id and a name
     //codehandin fields
-    private Label labelDuedate, labelFuncpercent, labelProglang;
-    private Text textFuncpercent;
-    private CheckBox checkBoxSpectestOnly, checkBoxMustattemptcompile;
+    private Label labelDuedate, labelFuncpercent, labelProglang, labelSpectestonly, labelMustattemptcompile;
+    private TextField textFuncpercent, textDuedate;
+    private CheckBox checkBoxSpectestonly, checkBoxMustattemptcompile;
     private ComboBox comboBoxProglang;
-    private DatePicker datePickerDuedate;
 
     //checkpoint fields
     private Label labelRuntimeargs, labelMarks;
-    private Text textRuntimeargs, textMarks;
+    private TextField textRuntimeargs, textMarks;
     //description runtimeargs ordering marks
 
     //test fields
     private CheckBox checkBoxGradeonly, checkBoxIoastext;
     private Label labelInput, labelOutput, labelOutputerr;
-    private Text textInput, textOutput, textOutputerr;
+    private TextField textInput, textOutput, textOutputerr;
 
-    public ItemShellTreeCell() {
-
+    private static String padText3(String in) {
+        int pads = 3 - in.length();
+        if (pads == 1) {
+            return " " + in;
+        } else if (pads == 2) {
+            return "  " + in;
+        }
+        return in;
     }
 
     @Override
@@ -75,18 +82,12 @@ public class ItemShellTreeCell extends TreeCell<ItemShell> {
             if (item != null) {
                 // used by all 
                 grid = new GridPane();
-                labelId = new Label("id: ");
-                textId = new Text();
-                textId.setWrappingWidth(20);
 
+//                textId = new TextField();
+//                textId.setMinWidth(20);
                 // used by most
-                labelOrd = new Label(" #: ");
-                textOrd = new Text();
-                textOrd.setWrappingWidth(20);
-                labelName = new Label();
-                labelName.setMinWidth(80);
-                textName = new Text();
-                textName.setWrappingWidth(80);
+//                textOrd = new TextField();
+//                textOrd.setMaxWidth(30);
                 labelIntroDesc = new Label();
                 labelIntroDesc.setMinWidth(80);
                 //textOrd.s
@@ -95,71 +96,84 @@ public class ItemShellTreeCell extends TreeCell<ItemShell> {
                 switch (oldtype) {
                     case 1: // course
                         Course co = item.co;
-                        System.out.println("oldid " + oldid + " newid " + co.getId());
-                        grid.add(labelId, 0, 0);
-                        grid.add(textId, 1, 0);
                         oldid = co.getId();
-                        textId.setText("" + co.getId());
-                        labelName.setText("Name: ");
+                        //System.out.println("oldid " + oldid + " newid " + co.getId());
+                        labelId = new Label("id: " + co.getId());
+                        grid.add(labelId, 0, 0);
+                        labelName = new Label("Course Name: " + co.getShortname());
+                        labelName.setMaxWidth(180);
                         grid.add(labelName, 2, 0);
-                        textName.setText(co.getShortname());
-                        grid.add(textName, 3, 0);
                         break;
                     case 2: // codehandin
                         Codehandin c = item.c;
-                        System.err.println(c);
-                        textId.setText("" + c.getId());
+                        //System.err.println(c);
+                        labelId = new Label("id: " + c.getId());
                         grid.add(labelId, 0, 0);
-                        grid.add(textId, 1, 0);
-                        labelName.setText("Assign name: ");
-                        grid.add(labelName, 2, 0);
-                        textName.setText(c.getAssignname());
-                        grid.add(textName, 3, 0);
-                        labelDuedate = new Label("Duedate: ");
-                        grid.add(labelDuedate, 4, 0);
-                        datePickerDuedate = new DatePicker(); //LocalDate.(c.getDuedate())
-                        grid.add(datePickerDuedate, 5, 0);
-                        labelFuncpercent = new Label("Functional percentage: ");
-                        grid.add(labelFuncpercent, 6, 0);
-                        textFuncpercent = new Text("" + c.getFuncpercent());
-                        checkBoxSpectestOnly = new CheckBox("Spec test Only: ");
-                        checkBoxSpectestOnly.setSelected(c.isSpectestonly());
-                        grid.add(checkBoxSpectestOnly, 7, 0);
-                        checkBoxMustattemptcompile = new CheckBox("Must attempt compile: ");
+                        labelName = new Label("Assign name: ");
+                        grid.add(labelName, 1, 0);
+                        textName = new TextField(c.getAssignname());
+                        textName.setMaxWidth(120);
+                        grid.add(textName, 2, 0);
+                        labelDuedate = new Label("  Duedate: ");
+                        grid.add(labelDuedate, 3, 0);
+                        System.err.println(c.getDuedate());
+                        textDuedate = new TextField(MoodleClient.convertToDateString(c.getDuedate()));
+                        grid.add(textDuedate, 4, 0);
+                        labelFuncpercent = new Label("  Functional percentage: ");
+                        grid.add(labelFuncpercent, 5, 0);
+                        textFuncpercent = new TextField("" + c.getFuncpercent());
+                        textFuncpercent.setMaxWidth(35);
+                        grid.add(textFuncpercent, 6, 0);
+                        labelSpectestonly = new Label("  Spec test Only: ");
+                        grid.add(labelSpectestonly, 7, 0);
+                        checkBoxSpectestonly = new CheckBox();
+                        checkBoxSpectestonly.setSelected(c.isSpectestonly());
+                        //HBox hBoxSpectestOnly = new HBox(5.0, new Label("Spec test Only: "), checkBoxSpectestOnly);
+                        //grid.add(hBoxSpectestOnly, 8, 0);
+                        grid.add(checkBoxSpectestonly, 8, 0);
+                        labelMustattemptcompile = new Label("  Must attempt compile: ");
+                        grid.add(labelMustattemptcompile, 9, 0);
+                        checkBoxMustattemptcompile = new CheckBox();
                         checkBoxMustattemptcompile.setSelected(c.isMustattemptcompile());
-                        labelProglang = new Label("Programming Language: ");
-                        grid.add(labelProglang, 8, 0);
+
+                        //HBox hBoxMustattemptcompile = new HBox(5.0, new Label("Must attempt compile: "), checkBoxMustattemptcompile);
+                        grid.add(checkBoxMustattemptcompile, 10, 0);
+                        labelProglang = new Label("  Programming Language: ");
+                        grid.add(labelProglang, 11, 0);
                         comboBoxProglang = new ComboBox();
+                        comboBoxProglang.getItems().addAll((Object[]) proglangsNames);
+                        comboBoxProglang.setValue(c.getProglang());
+                        grid.add(comboBoxProglang, 12, 0);
 
                         labelIntroDesc.setText("Assign Intro: ");
                         grid.add(labelIntroDesc, 2, 1);
-                        textIntroDesc = new Text(c.getIntro());
-                        grid.add(textIntroDesc, 3, 1, 5, 1);
+                        textIntroDesc = new TextField(c.getIntro());
+                        grid.add(textIntroDesc, 3, 1, 9, 1);
                         break;
-                    case 3: // checkpoint
-//              "id": 575,
-//              "name": "",
-//              "description": "a cp desc",
-//              "ordering": 1,
-//              "marks": 5,                        
+                    case 3: // checkpoint                     
                         Checkpoint cp = item.cp;
 //                        textId.setText("" + cp.getId());
-                        textOrd.setText("" + cp.getOrdering());
+                        labelOrd = new Label("#: " + cp.getOrdering());
                         grid.add(labelOrd, 0, 0);
-                        grid.add(textOrd, 1, 0);
-                        labelName = new Label("Name: ");
-                        grid.add(labelName, 2, 0);
-                        textName = new Text(cp.getName());
-                        grid.add(textName, 3, 0);
+                        labelName = new Label("cp Name: ");
+                        grid.add(labelName, 1, 0);
+                        textName = new TextField(cp.getName());
+                        textName.setMaxWidth(120);
+                        grid.add(textName, 2, 0);
                         labelMarks = new Label("Marks: ");
-                        grid.add(labelMarks, 4, 0);
-                        textMarks = new Text("" + cp.getMarks());
-                        textMarks.setWrappingWidth(20);
-                        grid.add(textMarks, 5, 0);
+                        grid.add(labelMarks, 3, 0);
+                        textMarks = new TextField("" + cp.getMarks());
+                        textMarks.setMaxWidth(35);
+                        grid.add(textMarks, 4, 0);
+                        labelRuntimeargs = new Label("Runtime Arguments: ");
+                        grid.add(labelRuntimeargs, 5, 0);
+                        textRuntimeargs = new TextField(cp.getRuntimeargs());
+                        grid.add(textRuntimeargs, 6, 0);
+
                         labelIntroDesc = new Label("Description: ");
-                        grid.add(labelIntroDesc, 6, 0);
-                        textIntroDesc = new Text(cp.getDescription());
-                        grid.add(textIntroDesc, 7, 0);
+                        grid.add(labelIntroDesc, 7, 0);
+                        textIntroDesc = new TextField(cp.getDescription());
+                        grid.add(textIntroDesc, 8, 0);
 
                         break;
                     case 4: // test
@@ -171,46 +185,53 @@ public class ItemShellTreeCell extends TreeCell<ItemShell> {
 //                  "output": "o2.txt",
 //                  "outputerr": "e2.txt",
 //                  "ordering": 1,
-//                  "marks": 2                        
+//                  "marks": 2
 
                         CHITest t = item.t;
+                        labelOrd = new Label(" #: " + t.getOrdering());
                         grid.add(labelOrd, 0, 0);
-                        textOrd.setText("" + t.getOrdering());
-                        grid.add(textOrd, 1, 0);
                         labelMarks = new Label("Marks: ");
-                        grid.add(labelMarks, 2, 0);
-                        textMarks = new Text("" + t.getMarks());
-                        textMarks.setWrappingWidth(20);
-                        grid.add(textMarks, 3, 0);
+                        grid.add(labelMarks, 1, 0);
+                        textMarks = new TextField("" + t.getMarks());
+                        textMarks.setMaxWidth(35);
+                        grid.add(textMarks, 2, 0);
 
-                        checkBoxGradeonly = new CheckBox("for Grading Only:");
+                        Label labelBoxGradeonly = new Label("for Grading Only: ");
+                        checkBoxGradeonly = new CheckBox();
                         checkBoxGradeonly.setSelected(t.isGradeonly());
+                        grid.add(labelBoxGradeonly, 3, 0);
                         grid.add(checkBoxGradeonly, 4, 0);
-                        checkBoxIoastext = new CheckBox("I/O as text (not files)");
-                        checkBoxIoastext.setSelected(t.isGradeonly());
-                        grid.add(checkBoxIoastext, 5, 0);
+
+                        Label labelIoastext = new Label("  I/O as text (not files): ");
+                        checkBoxIoastext = new CheckBox();
+                        checkBoxIoastext.setSelected(t.isIoastext());
+                        grid.add(labelIoastext, 5, 0);
+                        grid.add(checkBoxIoastext, 6, 0);
 
                         labelIntroDesc = new Label("Description: ");
-                        grid.add(labelIntroDesc, 2, 1);
-                        textIntroDesc = new Text(t.getDescription());
-                        grid.add(textIntroDesc, 3, 1);
+                        grid.add(labelIntroDesc, 2, 1, 2, 1);
+                        textIntroDesc = new TextField(t.getDescription());
+                        grid.add(textIntroDesc, 4, 1, 8, 1);
 
                         String i = t.getInput(),
                          o = t.getOutput(),
                          e = t.getOutputerr();
 
-                        labelInput = new Label("    Input: ");
-                        grid.add(labelInput, 2, 2);
-                        textInput = new Text(i == null ? "" : i);
-                        grid.add(textInput, 3, 2);
-                        labelOutput = new Label("   Output: ");
-                        grid.add(labelOutput, 4, 2);
-                        textOutput = new Text(o == null ? "" : o);
-                        grid.add(textOutput, 5, 2);
-                        labelOutputerr = new Label("Outputerr: ");
-                        grid.add(labelOutputerr, 6, 2);
-                        textOutputerr = new Text(e == null ? "" : e);
-                        grid.add(textOutputerr, 7, 2);
+                        labelInput = new Label("  Input: ");
+                        grid.add(labelInput, 7, 0);
+                        textInput = new TextField(i.equals("0") ? "No File" : i);
+                        textInput.setMinWidth(200);
+                        grid.add(textInput, 8, 0);
+                        labelOutput = new Label("  Output: ");
+                        grid.add(labelOutput, 9, 0);
+                        textOutput = new TextField(o.equals("0") ? "No File" : o);
+                        textOutput.setMinWidth(200);
+                        grid.add(textOutput, 10, 0);
+                        labelOutputerr = new Label("  Outputerr: ");
+                        grid.add(labelOutputerr, 11, 0);
+                        textOutputerr = new TextField(e.equals("0") ? "No File" : e);
+                        textOutputerr.setMinWidth(200);
+                        grid.add(textOutputerr, 12, 0);
 
                         break;
                     default:
@@ -221,6 +242,5 @@ public class ItemShellTreeCell extends TreeCell<ItemShell> {
                 }
             }
         }
-        notrun = false;
     }
 }
