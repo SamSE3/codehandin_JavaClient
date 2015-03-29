@@ -362,11 +362,11 @@ public class MoodleClient {
      * @return the details of an assignment as JsonObject
      */
     public static CHIData getAssignments(String token, boolean basic, boolean getproglang, int[] assignmentids) {
-        String[][] qps = new String[assignmentids.length + 3][2];
+        String[][] qps = new String[assignmentids.length + 4][2];
         qps[0] = new String[]{"wstoken", token};
         qps[1] = new String[]{"wsfunction", fetch_assignments};
         qps[2] = new String[]{"basic", (basic ? "1" : "0")};
-        qps[3] = new String[]{"getproglang", (getproglang ? "1" : "0")};
+        qps[3] = new String[]{"getproglangs", (getproglang ? "1" : "0")};
         for (int i = 0; i < (assignmentids.length); i++) {
             qps[4 + i] = new String[]{"assignmentids[" + i + "]", Integer.toString(assignmentids[i])};
         }

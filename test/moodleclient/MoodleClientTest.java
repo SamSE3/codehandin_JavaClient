@@ -85,7 +85,7 @@ public class MoodleClientTest {
     @Test
     public void testGetAssignmentsAll() {
         System.out.println("getAssignments_String_boolean");
-        CHIData cd = MoodleClient.getAssignmentsAll(adminToken, false);
+        CHIData cd = MoodleClient.getAssignmentsAll(adminToken, true);
 
         System.out.println(cd);
 //        cd = MoodleClient.getAssignments(adminToken, true);
